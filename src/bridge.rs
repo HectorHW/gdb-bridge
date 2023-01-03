@@ -14,6 +14,7 @@ where
     stdout: I,
 }
 
+#[allow(dead_code)]
 impl<I, O> ProcessIO<I, O>
 where
     I: BufRead,
