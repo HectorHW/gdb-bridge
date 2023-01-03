@@ -5,14 +5,12 @@ use crate::{
 
 #[test]
 fn gdb_spawns_and_dies() {
-    let _gdb = Gdb::new().unwrap();
+    let _gdb = Gdb::new("vuln").unwrap();
 }
 
 #[test]
 fn gdb_runs_cat_until_completion() {
-    let mut gdb = Gdb::new().unwrap();
-
-    gdb.send_command("file cat").unwrap();
+    let mut gdb = Gdb::new("cat").unwrap();
 
     let (_stop_message, stdout) = gdb.run("aaaa").unwrap();
 
@@ -21,18 +19,14 @@ fn gdb_runs_cat_until_completion() {
 
 #[test]
 fn gdb_detects_normal_exit() {
-    let mut gdb = Gdb::new().unwrap();
-
-    gdb.send_command("file vuln").unwrap();
+    let mut gdb = Gdb::new("vuln").unwrap();
 
     assert_eq!(gdb.run("aaa").unwrap().0, StopReason::ExitedNormally)
 }
 
 #[test]
 fn gdb_detects_crash_signal() {
-    let mut gdb = Gdb::new().unwrap();
-
-    gdb.send_command("file vuln").unwrap();
+    let mut gdb = Gdb::new("vuln").unwrap();
 
     assert!(matches!(
         gdb.run(
@@ -46,9 +40,7 @@ fn gdb_detects_crash_signal() {
 
 #[test]
 fn gdb_detects_nonzero_exit() {
-    let mut gdb = Gdb::new().unwrap();
-
-    gdb.send_command("file vuln").unwrap();
+    let mut gdb = Gdb::new("vuln").unwrap();
 
     assert_eq!(
         gdb.run("AAAAAAB").unwrap().0,

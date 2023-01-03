@@ -59,6 +59,7 @@ where
 pub struct Gdb {
     child: Child,
     io: ProcessIO<BufReader<std::process::ChildStdout>, BufWriter<std::process::ChildStdin>>,
+    exec_path: String,
 }
 
 #[derive(Debug)]
@@ -87,7 +88,7 @@ impl From<serde_json::Error> for RunError {
 }
 
 impl Gdb {
-    pub fn new() -> Result<Self, GDBSetupError> {
+    pub fn new(exec_path: &str) -> Result<Self, GDBSetupError> {
         let mut child = Command::new("gdb")
             .arg("--interpreter=mi")
             .stdout(Stdio::piped())
@@ -103,13 +104,20 @@ impl Gdb {
             stdout: BufReader::new(stdout),
         };
 
-        let mut gdb = Gdb { child, io };
+        let mut gdb = Gdb {
+            child,
+            io,
+            exec_path: exec_path.to_string(),
+        };
 
         gdb.io
             .read_until("(gdb)")
             .map_err(GDBSetupError::CommandError)?;
 
         gdb.setup_noninteractive()
+            .map_err(GDBSetupError::CommandError)?;
+
+        gdb.send_command(&format!("file {}", gdb.exec_path))
             .map_err(GDBSetupError::CommandError)?;
 
         Ok(gdb)
